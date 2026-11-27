@@ -3,8 +3,9 @@
 修 Stellaris 舰船设计器里「自动装配 / 填充空槽」把**没研究出来的部件**放进槽里，
 然后槽位 tooltip 弹 `§R缺少必要的科技：…§!` 的问题。
 
-状态：**第一版是定位版（只打日志，不改行为）**。跑一次就能把放置路径的真实调用点抓全，
-下一版再改成真正拦截。
+状态：**已生效**（2026-11-27 实测：点「填充空槽」后可以正常保存）。
+做法：`ComponentIsAllowedOnSlot` 记录“这个槽能造哪些档”，保存校验前把造不了的槽换成能造的那档；
+连一个能造的都没有的槽就清空（`fallback_clear`）。
 
 ## 结论（4.5 反编译，4.6 已核到对应代码）
 
@@ -150,3 +151,23 @@ CANBUILD 缺科技: tmpl=...5940 slot=...df68                      caller stella
 
 **B. 直接改选件**：定位 `CComponentSet::GetTemplateForSlot`（还没钉住；它不调 CanBuildComponent，所以运行期日志里看不到），
 替换成“在同一个 set 里找第一个 size/type 匹配且 `IsValidFor(tpl+0x2D0, 观测国)` 通过的”。
+
+## 实测结果（2026-11-27）
+
+```
+config: dry_run=0 enabled=1 fallback_clear=1
+hook ComponentIsAllowedOnSlot 已装（0x11CB900）
+hook ValidateSlots 已装（0x11DC210）
+REPAIR #1: 槽 0x…7148  0x…b160 -> 0x…29c0
+…（10 次替换，0 次清空）
+```
+
+用户反馈：**填充空槽后能正常保存**。
+
+## 配置（`ship_designer_fix.ini`，改完重启游戏生效）
+
+| 键 | 默认 | 说明 |
+|---|---|---|
+| `dry_run` | `no` | `yes` = 只写日志不真改（想先看替换结果时用） |
+| `enabled` | `yes` | 总开关 |
+| `fallback_clear` | `yes` | 一个能造的档都没有的槽直接清空；改成 `no` 则保持原样（那种槽仍会挡住保存） |
