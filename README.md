@@ -1,4 +1,6 @@
-# ship_designer_fix
+# Ship Designer Fix (ship-designer-fix)
+
+版本 **0.1.0**。安装包在 Releases 里：`ship-designer-fix-0.1.0.zip`（清单在最外层，旁边是 DLL）。
 
 修 Stellaris 舰船设计器里「自动装配 / 填充空槽」把**没研究出来的部件**放进槽里，
 然后槽位 tooltip 弹 `§R缺少必要的科技：…§!` 的问题。
@@ -93,17 +95,28 @@ done
   build-mingw/objhook/*.o -o ship_designer_fix.dll -lole32 -luuid
 ```
 
-安装（**必须做，否则 DLL 不会被加载** —— 上次日志是空的，就是这个原因）：
+安装（**必须做，否则 DLL 不会被加载**）：
 
 ```bat
+:: 用户：装发布包（launcher 的 Plugins 页也有 Update 按钮）
+stl plugin install "C:\path\to\ship-designer-fix-0.1.0.zip"
+
+:: 开发者：直接挂工作区这份（--link，config/ 和 logs/ 都留在工程目录）
 stl plugin install "C:\Users\小松岗\Desktop\produces\反编译\ship_designer_fix" --link
+
 stl plugins      :: 确认列表里有 ship-designer-fix
 stl launch
 ```
 
-日志：`ship_designer_fix\logs\ship_designer_fix.log`（`--link` 时就在工程目录）；
+更新：清单里 `update.github` 指向本仓库，launcher 读它的 **latest release**；
+tag（`v0.1.0`）比 `version` 大时提示更新，按 `update.asset`（`ship-designer-fix-*.zip`）下载安装。
+发版时 zip 里放 `stl-plugin.json` + DLL（可含 `defaults/`），**版本号每次都要变**。
+
+日志：`<插件目录>\logs\ship_designer_fix.log`（`--link` 时就在工程目录）；
 写不到时兜底到 `%TEMP%\ship_designer_fix.log`。头两行会打印 `dll 路径` / `日志目录`，
 用来确认跑的是不是这一份。
+
+配置文件查找顺序：`<插件目录>\config\ship_designer_fix.ini` → `<插件目录>\ship_designer_fix.ini` → 内置默认值。
 
 判断"真的加载了"：启动后日志里应出现
 `hook CanBuildComponent 已装（0xFA5330）`。
