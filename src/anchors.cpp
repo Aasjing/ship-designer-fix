@@ -104,6 +104,7 @@ ValidateFn g_validate_original = nullptr;
 volatile long g_validate_calls = 0;
 volatile long g_repairs = 0;
 volatile long g_missing_slot = 0;
+volatile long g_cleared = 0;
 
 // 遍历一个区段的槽条目：把“造不了的模板”换成记录表里“可造的最高档”
 void repair_entries(unsigned char* begin, unsigned char* end, void* ctx) {
@@ -120,7 +121,15 @@ void repair_entries(unsigned char* begin, unsigned char* end, void* ctx) {
 
     void* better = find_allowed(slot);
     if (better == nullptr || better == tmpl) {
-      if (InterlockedIncrement(&g_missing_slot) <= 12) {
+      // 没有任何能造的档（例如整个 set 对本帝国都不可用）→ 只能清空，否则保存永远被拒
+      if (g_config.fallback_clear) {
+        const long n = InterlockedIncrement(&g_cleared);
+        if (n <= 40) {
+          log_info("REPAIR(clear) #%ld: 槽 %p 的 %p 造不了且无可替代档，清空%s", n, slot, tmpl,
+                   g_config.dry_run ? "（dry_run，未写入）" : "");
+        }
+        if (!g_config.dry_run) *reinterpret_cast<void**>(entry + kEntryTemplate) = nullptr;
+      } else if (InterlockedIncrement(&g_missing_slot) <= 12) {
         log_info("REPAIR: 槽 %p 里的 %p 造不了，记录表里没有可替代档，保持原样", slot, tmpl);
       }
       continue;
@@ -194,9 +203,12 @@ void load_config(const std::wstring& dir) {
   };
   const std::string dry = value_of("dry_run");
   const std::string enabled = value_of("enabled");
+  const std::string clear = value_of("fallback_clear");
   if (!dry.empty()) g_config.dry_run = (dry != "no" && dry != "false" && dry != "0");
   if (!enabled.empty()) g_config.enabled = (enabled != "no" && enabled != "false" && enabled != "0");
-  log_info("config: dry_run=%d enabled=%d", g_config.dry_run ? 1 : 0, g_config.enabled ? 1 : 0);
+  if (!clear.empty()) g_config.fallback_clear = (clear != "no" && clear != "false" && clear != "0");
+  log_info("config: dry_run=%d enabled=%d fallback_clear=%d", g_config.dry_run ? 1 : 0,
+           g_config.enabled ? 1 : 0, g_config.fallback_clear ? 1 : 0);
 }
 
 bool executable_at(std::uint64_t address) {
