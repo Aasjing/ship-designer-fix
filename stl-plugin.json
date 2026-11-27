@@ -1,0 +1,16 @@
+{
+  "schema": 2,
+  "id": "ship-designer-fix",
+  "name": "Ship Designer Fix",
+  "version": "0.0.1",
+  "description": "Investigates/repairs the ship designer placing components the country cannot build (COMPONENT_CANT_BUILD_MISSING_TECH).",
+  "dll": "ship_designer_fix.dll",
+  "game": {
+    "exe_timestamps": ["0x6AF6BDEC"]
+  },
+  "load": {
+    "wait": "none",
+    "delay_ms": 0
+  },
+  "homepage": ""
+}
