@@ -6,7 +6,9 @@
   "description": "Fixes the ship designer filling empty slots / auto-assembling with components the country has not researched (which then cannot be saved: COMPONENT_CANT_BUILD_MISSING_TECH).",
   "dll": "ship_designer_fix.dll",
   "game": {
-    "exe_timestamps": ["0x6AF6BDEC"]
+    "exe_timestamps": [
+      "0x6AF6BDEC"
+    ]
   },
   "load": {
     "wait": "window",

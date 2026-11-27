@@ -201,3 +201,18 @@ git subtree split --prefix=ship_designer_fix -b ship-designer-fix   # 重建独�
 git push ship ship-designer-fix:main                                # 推到 gitee（remote 名 ship）
 git push gh   ship-designer-fix:main                                # 推到 GitHub 镜像（remote 名 gh）
 ```
+
+## 发版（`tools/release.py`）
+
+一条命令做完：改版本号 → 重建 DLL → 打 `dist/<id>-<version>.zip` + `.sha256` →
+提交并推 `origin` / gitee `ship` / GitHub `gh` → 发 GitHub Release 并上传两个资产。
+
+```bash
+python tools/release.py --bump patch          # 0.1.0 -> 0.1.1
+python tools/release.py 0.2.0                 # 指定版本号
+python tools/release.py 0.2.1 --dry-run       # 只看计划
+python tools/release.py 0.2.1 --no-release    # 只提交/推送
+```
+
+保护：版本号没变会拒绝；工作区有未提交改动会拒绝（`--no-push` 时跳过这项检查）。
+GitHub token 从 `git credential fill`（Windows 凭据管理器）取，不需要额外配置。
