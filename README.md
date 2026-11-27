@@ -174,15 +174,17 @@ REPAIR #1: 槽 0x…7148  0x…b160 -> 0x…29c0
 
 ## 上游仓库
 
-| 仓库 | 内容 |
-|---|---|
-| `gitee.com/Aasging/ship-designer-fix` | **本插件独立仓库**（只含本目录内容，历史独立） |
-| `gitee.com/Aasging/dll-injection` | 整个工作区（含本目录、`gamesetup_ext/` 与研究素材） |
+| 仓库 | remote 名 | 内容 |
+|---|---|---|
+| `gitee.com/Aasging/ship-designer-fix` | `ship` | **本插件独立仓库**（只含本目录内容，历史独立） |
+| `github.com/Aasjing/ship-designer-fix` | `gh` | 同上，GitHub 镜像 |
+| `gitee.com/Aasging/dll-injection` | `origin` | 整个工作区（含本目录、`gamesetup_ext/` 与研究素材） |
 
 工作区里改了本目录之后，同步到独立仓库的两条命令：
 
 ```bash
 cd ..                                      # 回到工作区根
 git subtree split --prefix=ship_designer_fix -b ship-designer-fix   # 重建独立分支
-git push ship ship-designer-fix:main                                # 推到新仓库（remote 名 ship）
+git push ship ship-designer-fix:main                                # 推到 gitee（remote 名 ship）
+git push gh   ship-designer-fix:main                                # 推到 GitHub 镜像（remote 名 gh）
 ```
