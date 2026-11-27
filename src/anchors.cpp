@@ -182,20 +182,32 @@ void load_config(const std::wstring& dir) {
   for (char& c : raw) {
     if (c == '\r') c = '\n';
   }
+  // 逐行解析，只认“行首就是 key”的行，注释行（# 开头）整行跳过
   const auto value_of = [&raw](const char* key) -> std::string {
-    const std::string needle = std::string(key);
+    const std::string needle(key);
     std::size_t pos = 0;
-    while ((pos = raw.find(needle, pos)) != std::string::npos) {
-      std::size_t equals = raw.find('=', pos + needle.size());
-      if (equals == std::string::npos) break;
-      std::size_t eol = raw.find('\n', equals);
-      std::string value = raw.substr(equals + 1, eol == std::string::npos ? std::string::npos : eol - equals - 1);
-      // 去掉空白和注释
+    while (pos < raw.size()) {
+      std::size_t eol = raw.find(0x0A, pos);
+      if (eol == std::string::npos) eol = raw.size();
+      std::string line = raw.substr(pos, eol - pos);
+      pos = eol + 1;
+      // 去掉行首空白
+      std::size_t begin = line.find_first_not_of(" 	");
+      if (begin == std::string::npos) continue;
+      if (line[begin] == '#') continue;                     // 注释行
+      const std::size_t equals = line.find('=', begin);
+      if (equals == std::string::npos) continue;
+      std::string name = line.substr(begin, equals - begin);
+      while (!name.empty() && (name.back() == ' ' || name.back() == 0x09)) name.pop_back();
+      if (name != needle) continue;
+      std::string value = line.substr(equals + 1);
       std::size_t comment = value.find('#');
       if (comment != std::string::npos) value.resize(comment);
       std::string trimmed;
       for (char c : value) {
-        if (c != ' ' && c != '\t') trimmed.push_back(static_cast<char>(tolower(static_cast<unsigned char>(c))));
+        if (c != ' ' && c != 0x09 && c != 0x0D) {
+          trimmed.push_back(static_cast<char>(tolower(static_cast<unsigned char>(c))));
+        }
       }
       return trimmed;
     }
