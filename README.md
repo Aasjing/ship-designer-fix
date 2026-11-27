@@ -106,3 +106,47 @@ stl launch
 
 判断"真的加载了"：启动后日志里应出现
 `hook CanBuildComponent 已装（0xFA5330）`。
+
+## 运行期实测（2026-11-27，hook CanBuildComponent 打出来的）
+
+一次「填充空槽」的日志（`logs/ship_designer_fix.log`）：
+
+```
+CANBUILD #N tmpl=...5940 owner=0 stage=... slot=...df68 -> 0     caller stellaris.exe+0x11CB97A
+CANBUILD #N tmpl=...d1a0 owner=0 stage=... slot=...df68 -> 0     caller stellaris.exe+0x11CB97A
+CANBUILD #N tmpl=...bd90 owner=0 stage=... slot=...df68 -> 1     caller stellaris.exe+0x11CB97A
+...
+CANBUILD 缺科技: tmpl=...5940 slot=...df68                      caller stellaris.exe+0x11DC278  ×370
+```
+
+读法：
+
+| 调用者 | 是谁 | 说明 |
+|---|---|---|
+| `0x11CB97A`（函数 **0x11CB900**） | `CShipDesignerBase::ComponentIsAllowedOnSlot(tpl, slot, reason)` | 对**同一个槽**依次试 `…5940`(✗) `…d1a0`(✗) `…bd90`(✓) —— 这是**查科技**的选件路径 |
+| `0x11DC278`（函数 **0x11DC210**） | 保存/提示用的校验（引用 `MISSING_PREREQUISITES`） | 每帧把槽里那个 `…5940` 判成“缺科技”，370 次/几秒 |
+| `0x11ECB4E`（函数 **0x11EC700**） | 部件选择器列表过滤 | 只调 1 次（slot=0） |
+
+也就是说：**放进槽里的是候选列表里的第一个（`…5940`），而同一时刻引擎自己已经算出可造的是第三个（`…bd90`）**。
+这正好对上静态分析（`CComponentSet::GetTemplateForSlot` 只比 size/type、取第一个匹配）。
+
+另外从 `ComponentIsAllowedOnSlot` 的反汇编还拿到几个 4.6 偏移：
+
+| 字段 | 偏移 |
+|---|---|
+| 槽的 size / type | `slot + 0x94` / `+0x95`（`+0x95 == 4` 表示不限） |
+| 模板的 size / type | `tpl + 0x228` / `+0x229` |
+| designer 的 EDesignOwner | `designer + 0xB0`（4.5 是 `+0xA8`） |
+| `g_CurrentIdler` | `0x3341138` |
+
+## 下一步（真正拦截）
+
+两条路，都不需要再猜 `CComponentSet::GetTemplateForSlot` 的地址：
+
+**A. 记录 + 修复**（推荐）
+1. hook `ComponentIsAllowedOnSlot`(0x11CB900)：凡是返回 true 的 `(slot, tpl)` 记进小表（后写覆盖）。
+2. hook 校验函数 `0x11DC210`：进来时遍历 `design → sections → slots`，把“模板不满足 prereq”的槽用表里记下的可造模板替换（8 字节指针写回），然后走原函数。
+   槽条目布局从 `0x11DC210` 的反汇编里读（4.5 是 `section+0x50` 数组、stride 0x20、`+8`=槽、`+0x10`=模板）。
+
+**B. 直接改选件**：定位 `CComponentSet::GetTemplateForSlot`（还没钉住；它不调 CanBuildComponent，所以运行期日志里看不到），
+替换成“在同一个 set 里找第一个 size/type 匹配且 `IsValidFor(tpl+0x2D0, 观测国)` 通过的”。
