@@ -165,13 +165,15 @@ bool validate_detour(void* begin, void* end, void* ctx) {
 
 // 读 ship_designer_fix.ini（不引第三方 ini 库，只认 key = value）
 void load_config(const std::wstring& dir) {
-  const std::wstring path = join(dir, L"ship_designer_fix.ini");
-  std::string text;
-  std::string raw;
+  // launcher 装好后设置文件在 config\ 下；--link 开发时也在插件目录的 config\ 里
+  std::wstring path = join(join(dir, L"config"), L"ship_designer_fix.ini");
+  if (!path_exists(path)) path = join(dir, L"ship_designer_fix.ini");
   if (!path_exists(path)) {
-    log_info("没有 %s，用默认值（dry_run = yes）", to_utf8(path).c_str());
+    log_info("没有 ship_designer_fix.ini，用内置默认值（dry_run = no, fallback_clear = yes）");
     return;
   }
+  log_info("config file: %s", to_utf8(path).c_str());
+  std::string raw;
   FILE* file = _wfopen(path.c_str(), L"rb");
   if (file == nullptr) return;
   char buffer[4096];

@@ -2,15 +2,27 @@
   "schema": 2,
   "id": "ship-designer-fix",
   "name": "Ship Designer Fix",
-  "version": "0.0.1",
-  "description": "Investigates/repairs the ship designer placing components the country cannot build (COMPONENT_CANT_BUILD_MISSING_TECH).",
+  "version": "0.1.0",
+  "description": "Fixes the ship designer filling empty slots / auto-assembling with components the country has not researched (which then cannot be saved: COMPONENT_CANT_BUILD_MISSING_TECH).",
   "dll": "ship_designer_fix.dll",
   "game": {
     "exe_timestamps": ["0x6AF6BDEC"]
   },
   "load": {
-    "wait": "none",
+    "wait": "window",
     "delay_ms": 0
   },
-  "homepage": ""
+  "config": [
+    {
+      "file": "ship_designer_fix.ini",
+      "default": "defaults/ship_designer_fix.ini",
+      "title": "Ship Designer Fix",
+      "substitute": true
+    }
+  ],
+  "update": {
+    "github": "Aasjing/ship-designer-fix",
+    "asset": "ship-designer-fix-*.zip"
+  },
+  "homepage": "https://github.com/Aasjing/ship-designer-fix"
 }

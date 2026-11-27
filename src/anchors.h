@@ -32,7 +32,7 @@ const AnchorsRva& anchors();
 
 // 配置（ship_designer_fix.ini，缺省 dry_run = yes）
 struct Config {
-  bool dry_run = true;        // 只记录“本该换成什么”，不真写
+  bool dry_run = false;       // yes = 只记录“本该换成什么”，不真写
   bool enabled = true;
   bool fallback_clear = true; // 记录表里没有可造档时清空该槽（否则保存仍会被拒）
 };
