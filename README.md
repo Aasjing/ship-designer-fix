@@ -171,3 +171,18 @@ REPAIR #1: 槽 0x…7148  0x…b160 -> 0x…29c0
 | `dry_run` | `no` | `yes` = 只写日志不真改（想先看替换结果时用） |
 | `enabled` | `yes` | 总开关 |
 | `fallback_clear` | `yes` | 一个能造的档都没有的槽直接清空；改成 `no` 则保持原样（那种槽仍会挡住保存） |
+
+## 上游仓库
+
+| 仓库 | 内容 |
+|---|---|
+| `gitee.com/Aasging/ship-designer-fix` | **本插件独立仓库**（只含本目录内容，历史独立） |
+| `gitee.com/Aasging/dll-injection` | 整个工作区（含本目录、`gamesetup_ext/` 与研究素材） |
+
+工作区里改了本目录之后，同步到独立仓库的两条命令：
+
+```bash
+cd ..                                      # 回到工作区根
+git subtree split --prefix=ship_designer_fix -b ship-designer-fix   # 重建独立分支
+git push ship ship-designer-fix:main                                # 推到新仓库（remote 名 ship）
+```
