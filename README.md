@@ -92,10 +92,17 @@ done
   build-mingw/objhook/*.o -o ship_designer_fix.dll -lole32 -luuid
 ```
 
-安装/调试：
+安装（**必须做，否则 DLL 不会被加载** —— 上次日志是空的，就是这个原因）：
 
 ```bat
-stl plugin install "C:\...\反编译\ship_designer_fix" --link
+stl plugin install "C:\Users\小松岗\Desktop\produces\反编译\ship_designer_fix" --link
+stl plugins      :: 确认列表里有 ship-designer-fix
 stl launch
 ```
-日志：`logs\ship_designer_fix.log`（`--link` 时在工程目录）。
+
+日志：`ship_designer_fix\logs\ship_designer_fix.log`（`--link` 时就在工程目录）；
+写不到时兜底到 `%TEMP%\ship_designer_fix.log`。头两行会打印 `dll 路径` / `日志目录`，
+用来确认跑的是不是这一份。
+
+判断"真的加载了"：启动后日志里应出现
+`hook CanBuildComponent 已装（0xFA5330）`。
